@@ -65,6 +65,11 @@ namespace LibraryApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            if(env.IsEnvironment("Testing"))
+            {
+                //do something in Test
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
