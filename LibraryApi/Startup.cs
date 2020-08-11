@@ -46,6 +46,11 @@ namespace LibraryApi
             });
             services.AddSingleton<IMapper>(mapperConfig.CreateMapper());
             services.AddSingleton<MapperConfiguration>(mapperConfig);
+            services.AddTransient<ILookupDevelopers, RedisDeveloperLookup>();
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetConnectionString("Redis");
+            });
 
             services.AddDbContext<LibraryDataContext>(options =>
 
