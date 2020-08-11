@@ -46,13 +46,19 @@ namespace LibraryApiIntegrationTests
 
                     var sp = services.BuildServiceProvider();
 
-                    using var scope = sp.CreateScope();
-                    var scopedServices = scope.ServiceProvider;
-                    var db = scopedServices.GetRequiredService<LibraryDataContext>();
-                    db.Database.EnsureCreated(); // basically "update-database"
+                    using (var scope = sp.CreateScope())
+                    {
+                        var scopedServices = scope.ServiceProvider;
+                        var db = scopedServices.GetRequiredService<LibraryDataContext>();
+                      //  db.Database.EnsureDeleted();
+                        if(db.Database.EnsureCreated()) // basically "update-database"
+                        {
+                            DataUtils.Initialize(db);
+                        }
 
-                    // TODO: Add Some Data
-                    DataUtils.ReinitializeDb(db);
+                       // TODO: Add Some Data
+                        
+                    }
                 }
 
 
