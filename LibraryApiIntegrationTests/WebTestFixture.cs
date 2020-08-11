@@ -32,6 +32,14 @@ namespace LibraryApiIntegrationTests
                     services.AddTransient<ISystemTime, TestingSystemTime>();
                 }
 
+                var cacheDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(ILookupDevelopers));
+                if(cacheDescriptor != null)
+                {
+                    services.Remove(cacheDescriptor);
+                    services.AddTransient<ILookupDevelopers, TestingDeveloperCache>();
+                }
+
                 var dbContextDescriptor = services.SingleOrDefault(d =>
                 d.ServiceType == typeof(DbContextOptions<LibraryDataContext>)
                 );
