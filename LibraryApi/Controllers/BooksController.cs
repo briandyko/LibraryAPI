@@ -1,7 +1,9 @@
 ﻿using LibraryApi.Domain;
+using LibraryApi.Mappers;
 using LibraryApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,11 +15,15 @@ namespace LibraryApi.Controllers
     public class BooksController : Controller
     {
         LibraryDataContext Context;
+        IMapBooks Mapper;
 
-        public BooksController(LibraryDataContext context)
+        public BooksController(LibraryDataContext context, IMapBooks mapper)
         {
             Context = context;
+            Mapper = mapper;
         }
+
+
         // Jeff says this is really cool. Maybe look at it again some day.
         [HttpPut("books/{id:int}/numberofpages")]
         public async Task<ActionResult> ChangeNumberOfPages(int id, [FromBody] int numberOfPages)
@@ -70,30 +76,9 @@ namespace LibraryApi.Controllers
             {
                 return BadRequest(ModelState);
             }
-            // 3. Add it to the database
-            var book = new Book
-            {
-               Title = bookToAdd.Title,
-               Author = bookToAdd.Author,
-               Genre = bookToAdd.Genre,
-               NumberOfPages = bookToAdd.NumberOfPages,
-               InStock = true
-            };
-            Context.Books.Add(book); // I have no Id!
-            await Context.SaveChangesAsync(); // Suddenly I have an ID! 
-            // 4. Return (if the post is to a collection)
-            //    - a 201 Created status code.
-            //    - Add a location header to the response. Location: http://localhost:1337/books/3
-            //    - Add an entity to the response that is EXACTLY what they'd get if they followed
-            //    - the location header.
-            var response = new GetABookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                Genre = book.Genre,
-                NumberOfPages = book.NumberOfPages
-            };
+            //WTCYWYH
+            GetABookResponse response = await Mapper.AddABook(bookToAdd);
+
             return CreatedAtRoute("books#getabook", new { bookId = response.Id }, response);
         }
 
@@ -129,32 +114,9 @@ namespace LibraryApi.Controllers
         }
 
         [HttpGet("books")]
-        public async Task<ActionResult<GetABookResponse>> GetAllBooks([FromQuery] string genre)
+        public async Task<ActionResult<GetBooksResponse>> GetAllBooks([FromQuery] string genre)
         {
-            var books =  Context.Books
-                .Where(b=> b.InStock)
-                .Select(b => new GetBooksResponseItem
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Author = b.Author,
-                    Genre = b.Genre,
-                    NumberOfPages = b.NumberOfPages
-                });
-                
-
-            if(genre != null)
-            {
-                books = books.Where(b => b.Genre == genre);
-            }
-
-            var booksList = await books.ToListAsync();
-            var response = new GetBooksResponse
-            {
-                Books = booksList,
-                GenreFilter = genre,
-                NumberOfBooks = booksList.Count
-            };
+            GetBooksResponse response = await Mapper.GetBooks(genre);
             return Ok(response);
         }
     }
