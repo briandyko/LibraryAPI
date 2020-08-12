@@ -1,4 +1,5 @@
 ﻿using LibraryApi.Domain;
+using LibraryApi.Filters;
 using LibraryApi.Mappers;
 using LibraryApi.Models;
 using Microsoft.AspNetCore.Http;
@@ -65,18 +66,9 @@ namespace LibraryApi.Controllers
         }
 
         [HttpPost("books")]
+        [ValidateModel]
         public async Task<ActionResult> AddABook([FromBody] PostBookCreate bookToAdd)
         {
-            // X 1. Need a model for the post [FromBody]
-            // 2. Validate the data coming in.
-            //    - declarative Validation
-            //    - Programmatic validation
-            //    - Return a 400 (Bad Request)
-            if(!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            //WTCYWYH
             GetABookResponse response = await Mapper.AddABook(bookToAdd);
 
             return CreatedAtRoute("books#getabook", new { bookId = response.Id }, response);
@@ -104,13 +96,7 @@ namespace LibraryApi.Controllers
                     NumberOfPages = b.NumberOfPages
                 }).SingleOrDefaultAsync();
 
-            if(book == null)
-            {
-                return NotFound();
-            } else
-            {
-                return Ok(book);
-            }
+            return this.Maybe(book);
         }
 
         [HttpGet("books")]

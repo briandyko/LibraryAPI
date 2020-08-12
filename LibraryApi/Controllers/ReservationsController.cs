@@ -1,5 +1,7 @@
 ﻿using LibraryApi.Domain;
+using LibraryApi.Filters;
 using LibraryApi.Models;
+using LibraryApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,10 +14,12 @@ namespace LibraryApi.Controllers
     public class ReservationsController : ControllerBase
     {
         LibraryDataContext Context;
+        ISendReservationsToTheQueue Queue;
 
-        public ReservationsController(LibraryDataContext context)
+        public ReservationsController(LibraryDataContext context, ISendReservationsToTheQueue queue)
         {
             Context = context;
+            Queue = queue;
         }
 
 
@@ -37,14 +41,9 @@ namespace LibraryApi.Controllers
         }
         // POST /reservations - add a reservation
         [HttpPost("/reservations")]
+        [ValidateModel]
         public async Task<ActionResult<ReservationItem>> AddReservation([FromBody] PostReservationRequest item)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            else
-            {
                 var reservation = new Reservation
                 {
                     For = item.For,
@@ -61,9 +60,11 @@ namespace LibraryApi.Controllers
                     Books = reservation.Books,
                     Status = reservation.Status
                 };
+
+                //Write it to the Queue for the background worker (Coming Soon!) to process!
+                Queue.SendReservation(response);
                 return Ok(response);
             }
-        }
 
         // GET /reservations/approved - returns all the approved reservations
         [HttpGet("/reservations/approved")]

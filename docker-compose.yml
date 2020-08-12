@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+    sql:
+        image: bdyko/librarysql
+        ports:
+            - "1433:1433"
+    redis:
+        image: redis
+        ports:
+            - "6379:6379"
+    rabbit:
+        image: bdyko/libraryrabbit
+        ports:
+            - "5672:5672"
+            - "15672:15672"
